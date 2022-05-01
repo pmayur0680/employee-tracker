@@ -206,6 +206,89 @@ viewAllRoles = () => {
       }) 
     })  
  }
+  // add new employee
+  addEmployee = () => {
+    // prompt user for first name, last name, role, and manager
+   inquirer.prompt([
+   {        
+        type: 'input',
+        name: 'firstName',
+        message: 'What is employee\'s first name?',        
+        validate: firstName => {
+            if(!firstName) {
+                return "Please enter first name";            
+            }                
+            return true;
+        }
+   },
+   {        
+        type: 'input',
+        name: 'lastName',
+        message: 'What is employee\'s last name?',        
+        validate: lastName => {
+            if(!lastName) {
+                return "Please enter last name";            
+            }                
+            return true;
+        }
+   }      
+    ]).then((answers) => {
+     const firstName = answers.firstName;
+     const lastName = answers.lastName;
+     // prompt for role to choose      
+     const fetchRoles = `SELECT id, title from role order by title`;
+     db.query(fetchRoles, (err, result) => {        
+       if (err) throw err;   
+       else
+       {
+          const listOfRoles = result.map(({ title, id }) => ({ name: title, value: id }));
+           inquirer.prompt([
+               {
+                 type: 'list', 
+                 name: 'roleId',
+                 message: 'What is employee\'s job title?',        
+                 choices: listOfRoles
+               }
+               ]).then((role) => {
+                const roleId = role.roleId;
+                // prompt for manager to choose      
+                const fetchManager = `SELECT id, first_name, last_name from employee order by 
+                first_name, last_name`;
+                db.query(fetchManager, (err, result) => {        
+                  if (err) throw err;   
+                  else
+                  {
+                    const listOfManagers = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+                     listOfManagers.push({name: 'N/A', value: null}); // no manager
+                      inquirer.prompt([
+                          {
+                            type: 'list', 
+                            name: 'managerId',
+                            message: 'Who is the employee\'s manager?',        
+                            choices: listOfManagers
+                          }
+                          ]).then((manager) => {
+                        const managerId = manager.managerId;
+                   
+                        const insertQuery = `INSERT INTO employee(first_name,last_name,role_id,manager_id) 
+                        VALUES (?, ?, ?, ?);`;
+                        db.query(insertQuery, [firstName, lastName, roleId, managerId], (err, result) => {
+                            if (err) throw err;   
+                            else {
+                                console.log(`${firstName} ${lastName} has been added`);   
+                                viewAllEmployees();  
+                            }
+                        
+                        })    
+                       
+                })
+        }     
+      }) 
+    })  
+    }    
+ })  
+}) 
+}
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -226,6 +309,12 @@ const startApplication = () => {
             case "Add a role":
                 addRole();
                 break;                                                   
+            case "Add a role":
+                addRole();
+                break;                                                   
+            case "Add an employee":
+                addEmployee();
+                break;                                                       
             case "Exit":
                 process.exit();
                 break;
