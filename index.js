@@ -90,6 +90,55 @@ viewAllRoles = () => {
          }            
      })   
  }
+ // add new department
+ addDepartment = () => {
+    inquirer.prompt([
+    {
+        type: 'input', 
+        name: 'department',
+        message: "What is the name of department you want to add?",
+        validate: department => {
+        if (department) {
+            return true;
+        } else {
+            console.log('Please enter department name');
+            return false;
+        }
+        }
+    }
+    ]).then((answers) => {
+      const department = answers.department;
+      // check if department exists
+      const fetchQuery = `SELECT id from department where name='${department}'`;
+      db.query(fetchQuery, (err, result) => {        
+        if(err) {       
+            console.log(err.message);                
+        }
+        else
+        {
+           if(result.length > 0)
+           {
+              console.log(`department ${department} already exists`);  
+              addDepartment();              
+           }
+           else
+           {    
+            const insertQuery = `INSERT INTO department(name) VALUES (?)`;
+            db.query(insertQuery, department, (err, result) => {
+                if(err) {
+                    console.log(err.message);                
+                }
+                else {
+                    console.log(`${department} has been added`);   
+                    viewAllDepartments();  
+               }
+            
+             })    
+           }    
+        }     
+      }) 
+    })  
+ }
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -103,7 +152,10 @@ const startApplication = () => {
                 break;            
             case "View all employees":
                 viewAllEmployees();
-                break;                     
+                break;          
+            case "Add a department":
+                addDepartment();
+                break;               
             case "Exit":
                 process.exit();
                 break;
