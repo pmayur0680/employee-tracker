@@ -13,7 +13,9 @@ const db = mysql.createConnection(
     }
     // ,    console.log(`Connected to the database.`)
   );
-  
+db.connect(err => {
+if (err) throw err;   
+});
 // menu choices to prompt
 const menuOptions = [
     {
@@ -41,9 +43,7 @@ viewAllDepartments = () => {
    // Get a list of departments from the server
     const fetchQuery = `SELECT id, name from department ORDER BY id`;
     db.query(fetchQuery, (err, result) => {
-        if(err) {
-            console.log(err.message);                
-        }
+        if (err) throw err;   
         else
         {
             console.table(result);
@@ -62,9 +62,7 @@ viewAllEmployees = () => {
      JOIN ROLE on employee.role_id = role.id 
      JOIN department ON role.department_id = department.id;`;
      db.query(fetchQuery, (err, result) => {
-         if(err) {
-             console.log(err.message);                
-         }
+         if (err) throw err;   
          else
          {
              console.table(result);
@@ -80,9 +78,7 @@ viewAllRoles = () => {
      FROM role 
      JOIN department ON role.department_id = department.id`;
      db.query(fetchQuery, (err, result) => {
-         if(err) {
-             console.log(err.message);                
-         }
+         if (err) throw err;   
          else
          {
              console.table(result);
@@ -98,12 +94,10 @@ viewAllRoles = () => {
         name: 'department',
         message: "What is the name of department you want to add?",
         validate: department => {
-        if (department) {
+            if(!department) {
+                return "Please enter department name";            
+            }                
             return true;
-        } else {
-            console.log('Please enter department name');
-            return false;
-        }
         }
     }
     ]).then((answers) => {
@@ -111,9 +105,7 @@ viewAllRoles = () => {
       // check if department exists
       const fetchQuery = `SELECT id from department where name='${department}'`;
       db.query(fetchQuery, (err, result) => {        
-        if(err) {       
-            console.log(err.message);                
-        }
+        if (err) throw err;   
         else
         {
            if(result.length > 0)
@@ -125,9 +117,7 @@ viewAllRoles = () => {
            {    
             const insertQuery = `INSERT INTO department(name) VALUES (?)`;
             db.query(insertQuery, department, (err, result) => {
-                if(err) {
-                    console.log(err.message);                
-                }
+                if (err) throw err;   
                 else {
                     console.log(`${department} has been added`);   
                     viewAllDepartments();  
@@ -135,6 +125,83 @@ viewAllRoles = () => {
             
              })    
            }    
+        }     
+      }) 
+    })  
+ }
+ // add new role
+ addRole = () => {
+     // prompt user for title, salary, and list of department to choose from
+    inquirer.prompt([
+    {
+        type: 'input', 
+        name: 'title',
+        message: "What role you want to add?",
+        validate: title => {
+            if(!title) {
+                return "Please enter role title";            
+            }                
+            return true;        
+        }
+    },
+    {
+        type: 'input', 
+        name: 'salary',
+        message: "What is the salary of this role?",
+        validate: salary => {
+            if(!salary || isNaN(salary)){                
+                return "Please enter valid input";
+            }            
+            return true;           
+        }
+    }
+    ]).then((answers) => {
+      const title = answers.title;
+      const salary = answers.salary;
+      // prompt for department to choose      
+      const fetchDepartments = `SELECT id, name from department order by name`;
+      db.query(fetchDepartments, (err, result) => {        
+        if (err) throw err;   
+        else
+        {
+            const listOfDepartments = result.map(({ name, id }) => ({ name: name, value: id }));
+            inquirer.prompt([
+                {
+                  type: 'list', 
+                  name: 'departmentId',
+                  message: "Choose department for the role:",
+                  choices: listOfDepartments
+                }
+                ]).then((department) => {
+                    const departmentId = department.departmentId;
+                    // check if role exists
+                        const fetchQuery = `SELECT id from role where 
+                        department_id=${departmentId} and title='${title}'`;
+                        db.query(fetchQuery, (err, result) => {        
+                            if (err) throw err;   
+                            else
+                            {
+                            if(result.length > 0)
+                            {
+                                console.log(`role ${title} already exists`);  
+                                addRole();              
+                            }
+                            else
+                            {    
+                                const insertQuery = `INSERT INTO role(title,salary,department_id) 
+                                VALUES (?, ?, ?);`;
+                                db.query(insertQuery, [title, salary, departmentId], (err, result) => {
+                                    if (err) throw err;   
+                                    else {
+                                        console.log(`${title} has been added`);   
+                                        viewAllRoles();  
+                                }
+                                
+                                })    
+                            }    
+                            }     
+                        }) 
+                })
         }     
       }) 
     })  
@@ -155,7 +222,10 @@ const startApplication = () => {
                 break;          
             case "Add a department":
                 addDepartment();
-                break;               
+                break;  
+            case "Add a role":
+                addRole();
+                break;                                                   
             case "Exit":
                 process.exit();
                 break;
