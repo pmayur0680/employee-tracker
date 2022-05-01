@@ -2,10 +2,18 @@
 const inquirer = require('inquirer'); // https://www.npmjs.com/package/inquirer
 const mysql = require('mysql2'); // https://www.npmjs.com/package/mysql2 
 const cTable = require('console.table'); // https://www.npmjs.com/package/console.table
-// Include all required clases
-const Department = require('./lib/Department');
-// const Employee = require('./lib/Employee');
-// const Role = require('./lib/Role');
+
+// Connect to database
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'employeetracker_db'
+    }
+    // ,    console.log(`Connected to the database.`)
+  );
+  
 // menu choices to prompt
 const menuOptions = [
     {
@@ -27,26 +35,80 @@ const menuOptions = [
         'View department budget',
         'Exit']
     }
-]    
-function viewAllDepartments()
-{
-   // Get a list of departments from the server   
-    
-   // send user back to menu
-    startApplication();
+]  
+// view all departments  
+viewAllDepartments = () => {
+   // Get a list of departments from the server
+    const fetchQuery = `SELECT id, name from department ORDER BY id`;
+    db.query(fetchQuery, (err, result) => {
+        if(err) {
+            console.log(err.message);                
+        }
+        else
+        {
+            console.table(result);
+            startApplication();           
+        }            
+    })   
 }
+// view all employees  
+viewAllEmployees = () => {
+    // Get a list of employees from the server
+     const fetchQuery = `SELECT employee.id,employee.first_name,employee.last_name,
+     manager.first_name as manager_first_name,manager.last_name as manager_last_name,
+     role.title,role.salary,department.name as department 
+     FROM employee employee 
+     LEFT JOIN employee manager on employee.manager_id = manager.id  
+     JOIN ROLE on employee.role_id = role.id 
+     JOIN department ON role.department_id = department.id;`;
+     db.query(fetchQuery, (err, result) => {
+         if(err) {
+             console.log(err.message);                
+         }
+         else
+         {
+             console.table(result);
+             startApplication();           
+         }            
+     })   
+ }
+
+// view all roles  
+viewAllRoles = () => {
+    // Get a list of roles from the server
+     const fetchQuery = `SELECT role.id, role.title, role.salary, department.name as department 
+     FROM role 
+     JOIN department ON role.department_id = department.id`;
+     db.query(fetchQuery, (err, result) => {
+         if(err) {
+             console.log(err.message);                
+         }
+         else
+         {
+             console.table(result);
+             startApplication();           
+         }            
+     })   
+ }
 // Show choices to user
-const startApplication = () => {
+const startApplication = () => {    
     inquirer.prompt(menuOptions)
     .then((answers) => {
         switch (answers.userChoice) {
             case "View all departments":
                 viewAllDepartments();
-                break;        
+                break;  
+            case "View all roles":
+                viewAllRoles();
+                break;            
+            case "View all employees":
+                viewAllEmployees();
+                break;                     
             case "Exit":
+                process.exit();
                 break;
             default:
-                break;
+                process.exit();
         }
     })
     .catch((err) => console.error(err));  
