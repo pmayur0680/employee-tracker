@@ -457,7 +457,7 @@ deleteRole = () => {
             {
                 type: 'list', 
                 name: 'roleId',
-                message: 'What is employee\'s job title?',        
+                message: "Choose role to delete:",
                 choices: listOfRoles
             }
             ]).then((role) => {
@@ -474,6 +474,36 @@ deleteRole = () => {
         }
     })         
   }
+// allow user to delete selected employee
+deleteEmployee = () => {
+    // prompt for employee to choose      
+    const fetchEmployee = `SELECT id, first_name, last_name from employee order by first_name, last_name`;
+    db.query(fetchEmployee, (err, result) => {        
+    if (err) throw err;   
+    else
+    {
+        const listOfEmployee = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+        inquirer.prompt([
+        {
+            type: 'list', 
+            name: 'employeeId',
+            message: "Choose employee to delete:",
+            choices: listOfEmployee
+        }
+        ]).then((employee) => {
+        const employeeId = employee.employeeId;
+        const deleteQuery = `DELETE FROM employee where id=?`;
+        db.query(deleteQuery, employeeId, (err, result) => {
+            if (err) throw err;   
+            else {
+                console.log(`Selected employee has been deleted`);   
+                viewAllRoles();  
+            }                  
+            })  
+        })  
+    }
+})         
+}  
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -518,6 +548,9 @@ const startApplication = () => {
             case "Delete a role":
                 deleteRole();
                 break;      
+            case "Delete an employee":
+                deleteEmployee();
+                break;                                          
             case "Exit":
                 process.exit();
                 break;
