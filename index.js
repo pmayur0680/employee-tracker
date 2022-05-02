@@ -386,7 +386,7 @@ updateEmployeeManager = () => {
     })         
 }
 //   Get a list of employee by manager
-ViewEmployeeByManager = () => {    
+viewEmployeeByManager = () => {    
     const fetchQuery = `SELECT e.first_name, e.last_name, m.first_name as manager_first_name, m.last_name as manager_last_name from 
     employee e JOIN employee m 
     ON e.manager_id=m.id`;
@@ -400,7 +400,7 @@ ViewEmployeeByManager = () => {
     })   
 }
 //   Get a list of employee by department
-ViewEmployeeByDepartment = () => {    
+viewEmployeeByDepartment = () => {    
     const fetchQuery = `SELECT employee.first_name, employee.last_name, department.name as department 
     FROM employee JOIN 
     role ON employee.role_id = role.id JOIN 
@@ -413,6 +413,37 @@ ViewEmployeeByDepartment = () => {
             startApplication();           
         }            
     })   
+}
+// allow user to delete selected department
+deleteDepartment = () => {
+  // prompt list of employee to choose      
+       // prompt for department to choose      
+        const fetchDepartments = `SELECT id, name from department order by name`;
+        db.query(fetchDepartments, (err, result) => {        
+        if (err) throw err;   
+        else
+        {
+        const listOfDepartments = result.map(({ name, id }) => ({ name: name, value: id }));
+        inquirer.prompt([
+            {
+                type: 'list', 
+                name: 'departmentId',
+                message: "Choose department to delete:",
+                choices: listOfDepartments
+            }
+            ]).then((department) => {
+                  const departmentId = department.departmentId;
+                  const deleteQuery = `DELETE FROM department where id=?`;
+                       db.query(deleteQuery, departmentId, (err, result) => {
+                           if (err) throw err;   
+                           else {
+                               console.log(`Selected department has been deleted`);   
+                               viewAllDepartments();  
+                           }                  
+              })  
+          })  
+      }
+  })         
 }
 // Show choices to user
 const startApplication = () => {    
@@ -447,11 +478,14 @@ const startApplication = () => {
                 updateEmployeeManager();
                 break;                 
             case "View employees by manager":
-                ViewEmployeeByManager();
+                viewEmployeeByManager();
                 break;  
             case "View employees by department":
-                ViewEmployeeByDepartment();
-                break;                                                                                                                                                               
+                viewEmployeeByDepartment();
+                break;           
+            case "Delete department":
+                deleteDepartment();
+                break;                                                                                                                                                                                                  
             case "Exit":
                 process.exit();
                 break;
