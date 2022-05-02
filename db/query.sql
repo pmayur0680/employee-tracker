@@ -27,3 +27,4 @@ UPDATE employee set manager_id=? WHERE id=?
 SELECT e.first_name, e.last_name, m.first_name as manager_first_name, m.last_name as manager_last_name from 
 employee e JOIN employee m 
 ON e.manager_id=m.id
+-- View employees by department
