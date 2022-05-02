@@ -335,6 +335,55 @@ updateEmployeeRole = () => {
         }
     })         
 }
+// Allow to update employee manager
+updateEmployeeManager = () => {
+    // prompt list of employee to choose      
+    const fetchEmployee = `SELECT id, first_name, last_name from employee order by first_name, last_name`;
+    db.query(fetchEmployee, (err, result) => {        
+        if (err) throw err;   
+        else
+        {
+            const listOfEmployee = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+            inquirer.prompt([
+                {
+                    type: 'list', 
+                    name: 'employeeId',
+                    message: 'Select employee would you like to update?',        
+                    choices: listOfEmployee
+                }
+                ]).then((employee) => {
+                    const employeeId = employee.employeeId;
+                    //prompt for manager to choose  
+                    const fetchManager = `SELECT id, first_name, last_name from employee order by first_name, last_name`;
+                    db.query(fetchManager, (err, result) => {        
+                        if (err) throw err;   
+                        else
+                        {
+                         const listOfManager = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+                         inquirer.prompt([
+                         {
+                             type: 'list', 
+                             name: 'managerId',
+                             message: 'Who is employee\'s new manager?',        
+                             choices: listOfManager
+                         }
+                         ]).then((manager) => {
+                         const managerId = manager.managerId;
+                         const updateQuery = `UPDATE employee SET manager_id=? where id=?`;
+                         db.query(updateQuery, [managerId, employeeId], (err, result) => {
+                             if (err) throw err;   
+                             else {
+                                 console.log(`Employee manager has been updated`);   
+                                 viewAllEmployees();  
+                             }
+                         })
+                        })
+                        } 
+                })  
+            })  
+        }
+    })         
+}
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -363,7 +412,10 @@ const startApplication = () => {
                 break;           
             case "Update an employee role":
                 updateEmployeeRole();
-                break;                                                                                           
+                break;       
+            case "Update employee manager":
+                updateEmployeeManager();
+                break;                                                                                                                               
             case "Exit":
                 process.exit();
                 break;
