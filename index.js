@@ -504,6 +504,22 @@ deleteEmployee = () => {
     }
 })         
 }  
+//   View department budget
+viewDepartmentBudget = () => {    
+    const fetchQuery = `SELECT department.name as department,SUM(role.salary) as budget 
+    FROM employee JOIN 
+    role ON employee.role_id = role.id JOIN 
+    department ON role.department_id = department.id GROUP BY department.name`;
+    db.query(fetchQuery, (err, result) => {
+        if (err) throw err;   
+        else
+        {
+            console.table(result);
+            startApplication();           
+        }            
+    })   
+}
+
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -550,7 +566,10 @@ const startApplication = () => {
                 break;      
             case "Delete an employee":
                 deleteEmployee();
-                break;                                          
+                break;     
+            case "View department budget":
+                viewDepartmentBudget();
+                break;                                                              
             case "Exit":
                 process.exit();
                 break;

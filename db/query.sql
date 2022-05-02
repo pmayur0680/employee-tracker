@@ -28,3 +28,18 @@ SELECT e.first_name, e.last_name, m.first_name as manager_first_name, m.last_nam
 employee e JOIN employee m 
 ON e.manager_id=m.id
 -- View employees by department
+SELECT employee.first_name, employee.last_name, department.name as department 
+FROM employee JOIN 
+role ON employee.role_id = role.id JOIN 
+department ON role.department_id = department.id
+-- Delete department
+DELETE FROM department where id=?
+-- Delete role
+DELETE FROM role where id=?
+-- Delete employee
+DELETE FROM employee where id=?
+-- View department budget
+SELECT department.name as department,SUM(role.salary) as budget 
+FROM employee JOIN 
+role ON employee.role_id = role.id JOIN 
+department ON role.department_id = department.id GROUP BY department.name
