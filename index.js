@@ -497,7 +497,7 @@ deleteEmployee = () => {
             if (err) throw err;   
             else {
                 console.log(`Selected employee has been deleted`);   
-                viewAllRoles();  
+                viewAllEmployees();  
             }                  
             })  
         })  
