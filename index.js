@@ -2,7 +2,6 @@
 const inquirer = require('inquirer'); // https://www.npmjs.com/package/inquirer
 const mysql = require('mysql2'); // https://www.npmjs.com/package/mysql2 
 const cTable = require('console.table'); // https://www.npmjs.com/package/console.table
-
 // Connect to database
 const db = mysql.createConnection(
     {
@@ -13,9 +12,7 @@ const db = mysql.createConnection(
     }
     // ,    console.log(`Connected to the database.`)
   );
-db.connect(err => {
-if (err) throw err;   
-});
+
 // menu choices to prompt
 const menuOptions = [
     {
@@ -39,8 +36,8 @@ const menuOptions = [
     }
 ]  
 // view all departments  
-viewAllDepartments = () => {
-   // Get a list of departments from the server
+viewAllDepartments = () => {      
+//   Get a list of departments from the server
     const fetchQuery = `SELECT id, name from department ORDER BY id`;
     db.query(fetchQuery, (err, result) => {
         if (err) throw err;   
@@ -103,29 +100,29 @@ viewAllRoles = () => {
     ]).then((answers) => {
       const department = answers.department;
       // check if department exists
-      const fetchQuery = `SELECT id from department where name='${department}'`;
-      db.query(fetchQuery, (err, result) => {        
-        if (err) throw err;   
-        else
+    const fetchQuery = `SELECT id from department where name='${department}'`;
+    db.query(fetchQuery, (err, result) => {        
+    if (err) throw err;   
+    else
+    {
+        if(result.length > 0)
         {
-           if(result.length > 0)
-           {
-              console.log(`department ${department} already exists`);  
-              addDepartment();              
-           }
-           else
-           {    
-            const insertQuery = `INSERT INTO department(name) VALUES (?)`;
-            db.query(insertQuery, department, (err, result) => {
-                if (err) throw err;   
-                else {
-                    console.log(`${department} has been added`);   
-                    viewAllDepartments();  
-               }
-            
-             })    
-           }    
-        }     
+            console.log(`department ${department} already exists`);  
+            addDepartment();              
+        }
+        else
+        {    
+        const insertQuery = `INSERT INTO department(name) VALUES (?)`;
+        db.query(insertQuery, department, (err, result) => {
+            if (err) throw err;   
+            else {
+                console.log(`${department} has been added`);   
+                viewAllDepartments();  
+            }
+        
+            })    
+        }    
+    }     
       }) 
     })  
  }
@@ -159,50 +156,50 @@ viewAllRoles = () => {
       const title = answers.title;
       const salary = answers.salary;
       // prompt for department to choose      
-      const fetchDepartments = `SELECT id, name from department order by name`;
-      db.query(fetchDepartments, (err, result) => {        
-        if (err) throw err;   
-        else
-        {
-            const listOfDepartments = result.map(({ name, id }) => ({ name: name, value: id }));
-            inquirer.prompt([
+const fetchDepartments = `SELECT id, name from department order by name`;
+db.query(fetchDepartments, (err, result) => {        
+if (err) throw err;   
+else
+{
+const listOfDepartments = result.map(({ name, id }) => ({ name: name, value: id }));
+inquirer.prompt([
+    {
+        type: 'list', 
+        name: 'departmentId',
+        message: "Choose department for the role:",
+        choices: listOfDepartments
+    }
+    ]).then((department) => {
+        const departmentId = department.departmentId;
+        // check if role exists
+            const fetchQuery = `SELECT id from role where 
+            department_id=${departmentId} and title='${title}'`;
+            db.query(fetchQuery, (err, result) => {        
+                if (err) throw err;   
+                else
                 {
-                  type: 'list', 
-                  name: 'departmentId',
-                  message: "Choose department for the role:",
-                  choices: listOfDepartments
+                if(result.length > 0)
+                {
+                    console.log(`role ${title} already exists`);  
+                    addRole();              
                 }
-                ]).then((department) => {
-                    const departmentId = department.departmentId;
-                    // check if role exists
-                        const fetchQuery = `SELECT id from role where 
-                        department_id=${departmentId} and title='${title}'`;
-                        db.query(fetchQuery, (err, result) => {        
-                            if (err) throw err;   
-                            else
-                            {
-                            if(result.length > 0)
-                            {
-                                console.log(`role ${title} already exists`);  
-                                addRole();              
-                            }
-                            else
-                            {    
-                                const insertQuery = `INSERT INTO role(title,salary,department_id) 
-                                VALUES (?, ?, ?);`;
-                                db.query(insertQuery, [title, salary, departmentId], (err, result) => {
-                                    if (err) throw err;   
-                                    else {
-                                        console.log(`${title} has been added`);   
-                                        viewAllRoles();  
-                                }
-                                
-                                })    
-                            }    
-                            }     
-                        }) 
-                })
-        }     
+                else
+                {    
+                    const insertQuery = `INSERT INTO role(title,salary,department_id) 
+                    VALUES (?, ?, ?);`;
+                    db.query(insertQuery, [title, salary, departmentId], (err, result) => {
+                        if (err) throw err;   
+                        else {
+                            console.log(`${title} has been added`);   
+                            viewAllRoles();  
+                    }
+                    
+                    })    
+                }    
+                }     
+            }) 
+    })
+}     
       }) 
     })  
  }
@@ -241,53 +238,102 @@ viewAllRoles = () => {
        if (err) throw err;   
        else
        {
-          const listOfRoles = result.map(({ title, id }) => ({ name: title, value: id }));
-           inquirer.prompt([
-               {
-                 type: 'list', 
-                 name: 'roleId',
-                 message: 'What is employee\'s job title?',        
-                 choices: listOfRoles
-               }
-               ]).then((role) => {
-                const roleId = role.roleId;
-                // prompt for manager to choose      
-                const fetchManager = `SELECT id, first_name, last_name from employee order by 
-                first_name, last_name`;
-                db.query(fetchManager, (err, result) => {        
-                  if (err) throw err;   
-                  else
-                  {
-                    const listOfManagers = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
-                     listOfManagers.push({name: 'N/A', value: null}); // no manager
-                      inquirer.prompt([
-                          {
-                            type: 'list', 
-                            name: 'managerId',
-                            message: 'Who is the employee\'s manager?',        
-                            choices: listOfManagers
-                          }
-                          ]).then((manager) => {
-                        const managerId = manager.managerId;
-                   
-                        const insertQuery = `INSERT INTO employee(first_name,last_name,role_id,manager_id) 
-                        VALUES (?, ?, ?, ?);`;
-                        db.query(insertQuery, [firstName, lastName, roleId, managerId], (err, result) => {
-                            if (err) throw err;   
-                            else {
-                                console.log(`${firstName} ${lastName} has been added`);   
-                                viewAllEmployees();  
-                            }
-                        
-                        })    
-                       
-                })
+    const listOfRoles = result.map(({ title, id }) => ({ name: title, value: id }));
+    inquirer.prompt([
+        {
+            type: 'list', 
+            name: 'roleId',
+            message: 'What is employee\'s job title?',        
+            choices: listOfRoles
+        }
+        ]).then((role) => {
+        const roleId = role.roleId;
+        // prompt for manager to choose      
+        const fetchManager = `SELECT id, first_name, last_name from employee order by 
+        first_name, last_name`;
+        db.query(fetchManager, (err, result) => {        
+            if (err) throw err;   
+            else
+            {
+            const listOfManagers = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+                listOfManagers.push({name: 'N/A', value: null}); // no manager
+                inquirer.prompt([
+                    {
+                    type: 'list', 
+                    name: 'managerId',
+                    message: 'Who is the employee\'s manager?',        
+                    choices: listOfManagers
+                    }
+                    ]).then((manager) => {
+                const managerId = manager.managerId;
+            
+                const insertQuery = `INSERT INTO employee(first_name,last_name,role_id,manager_id) 
+                VALUES (?, ?, ?, ?);`;
+                db.query(insertQuery, [firstName, lastName, roleId, managerId], (err, result) => {
+                    if (err) throw err;   
+                    else {
+                        console.log(`${firstName} ${lastName} has been added`);   
+                        viewAllEmployees();  
+                    }
+                
+                })    
+                
+        })
         }     
       }) 
     })  
     }    
  })  
 }) 
+}
+// Allow employee to update role
+updateEmployeeRole = () => {
+    // prompt list of employee to choose      
+    const fetchEmployee = `SELECT id, first_name, last_name from employee order by first_name, last_name`;
+    db.query(fetchEmployee, (err, result) => {        
+        if (err) throw err;   
+        else
+        {
+            const listOfEmployee = result.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+            inquirer.prompt([
+                {
+                    type: 'list', 
+                    name: 'employeeId',
+                    message: 'Select employee would you like to update?',        
+                    choices: listOfEmployee
+                }
+                ]).then((employee) => {
+                    const employeeId = employee.employeeId;
+                    //prompt for role to choose  
+                    const fetchRoles = `SELECT id, title from role order by title`; 
+                    db.query(fetchRoles, (err, result) => {        
+                        if (err) throw err;   
+                        else
+                        {
+                     const listOfRoles = result.map(({ title, id }) => ({ name: title, value: id }));
+                     inquirer.prompt([
+                         {
+                             type: 'list', 
+                             name: 'roleId',
+                             message: 'What is employee\'s new job title?',        
+                             choices: listOfRoles
+                         }
+                         ]).then((role) => {
+                         const roleId = role.roleId;
+                         const updateQuery = `UPDATE employee SET role_id=? where id=?`;
+                         db.query(updateQuery, [roleId, employeeId], (err, result) => {
+                             if (err) throw err;   
+                             else {
+                                 console.log(`Employee role has been updated`);   
+                                 viewAllEmployees();  
+                             }
+                         })
+                        })
+                        } 
+                })  
+            })  
+        }
+    })         
 }
 // Show choices to user
 const startApplication = () => {    
@@ -314,7 +360,10 @@ const startApplication = () => {
                 break;                                                   
             case "Add an employee":
                 addEmployee();
-                break;                                                       
+                break;           
+            case "Update an employee role":
+                updateEmployeeRole();
+                break;                                                                                           
             case "Exit":
                 process.exit();
                 break;
