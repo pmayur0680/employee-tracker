@@ -416,7 +416,6 @@ viewEmployeeByDepartment = () => {
 }
 // allow user to delete selected department
 deleteDepartment = () => {
-  // prompt list of employee to choose      
        // prompt for department to choose      
         const fetchDepartments = `SELECT id, name from department order by name`;
         db.query(fetchDepartments, (err, result) => {        
@@ -445,6 +444,36 @@ deleteDepartment = () => {
       }
   })         
 }
+// allow user to delete selected role
+deleteRole = () => {
+        // prompt for role to choose      
+        const fetchRoles = `SELECT id, title from role order by title`;
+        db.query(fetchRoles, (err, result) => {        
+        if (err) throw err;   
+        else
+        {
+            const listOfRoles = result.map(({ title, id }) => ({ name: title, value: id }));
+            inquirer.prompt([
+            {
+                type: 'list', 
+                name: 'roleId',
+                message: 'What is employee\'s job title?',        
+                choices: listOfRoles
+            }
+            ]).then((role) => {
+            const roleId = role.roleId;
+            const deleteQuery = `DELETE FROM role where id=?`;
+            db.query(deleteQuery, roleId, (err, result) => {
+                if (err) throw err;   
+                else {
+                    console.log(`Selected role has been deleted`);   
+                    viewAllRoles();  
+                }                  
+                })  
+            })  
+        }
+    })         
+  }
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -485,7 +514,10 @@ const startApplication = () => {
                 break;           
             case "Delete department":
                 deleteDepartment();
-                break;                                                                                                                                                                                                  
+                break;      
+            case "Delete a role":
+                deleteRole();
+                break;      
             case "Exit":
                 process.exit();
                 break;
