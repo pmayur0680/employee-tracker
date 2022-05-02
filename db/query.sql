@@ -21,3 +21,9 @@ INSERT INTO role(title,salary,department_id) VALUES (?, ?, ?);
 INSERT INTO employee(first_name,last_name,role_id,manager_id) VALUES (?, ?, ?, ?);
 -- Update employee role
 UPDATE employee set role_id=? WHERE id=?
+-- Update employee manager
+UPDATE employee set manager_id=? WHERE id=?
+-- View employees by manager
+SELECT e.first_name, e.last_name, m.first_name as manager_first_name, m.last_name as manager_last_name from 
+employee e JOIN employee m 
+ON e.manager_id=m.id

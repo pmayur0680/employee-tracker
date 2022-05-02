@@ -384,6 +384,20 @@ updateEmployeeManager = () => {
         }
     })         
 }
+//   Get a list of employee by manager
+ViewEmployeeByManager = () => {    
+    const fetchQuery = `SELECT e.first_name, e.last_name, m.first_name as manager_first_name, m.last_name as manager_last_name from 
+    employee e JOIN employee m 
+    ON e.manager_id=m.id`;
+    db.query(fetchQuery, (err, result) => {
+        if (err) throw err;   
+        else
+        {
+            console.table(result);
+            startApplication();           
+        }            
+    })   
+}
 // Show choices to user
 const startApplication = () => {    
     inquirer.prompt(menuOptions)
@@ -415,7 +429,10 @@ const startApplication = () => {
                 break;       
             case "Update employee manager":
                 updateEmployeeManager();
-                break;                                                                                                                               
+                break;                 
+            case "View employees by manager":
+                ViewEmployeeByManager();
+                break;                                                                                                                           
             case "Exit":
                 process.exit();
                 break;
